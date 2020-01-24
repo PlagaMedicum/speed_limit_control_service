@@ -10,24 +10,28 @@ import (
 )
 
 var httpHeaders = map[string]string{
+    "Access-Control-Allow-Headers": "Content-Type, api_key, Authorization, access-control-allow-origin",
     "Access-Control-Allow-Origin":  "*",
-    "Access-Control-Allow-Headers": "access-control-allow-origin, content-type",
     "Content-Type":                 "application/json",
+    "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
 }
 
 func httpMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
         for k, v := range httpHeaders {
-            c.Set(k, v)
+            c.Writer.Header().Set(k, v)
         }
 
         if c.Request.Method == http.MethodOptions {
+            c.AbortWithStatus(http.StatusNoContent)
             return
         }
 
         c.Next()
     }
 }
+
+
 
 func main() {
     h := handlers.Controller{
@@ -39,13 +43,11 @@ func main() {
     }
 
     r := gin.New()
-    r.Use(gin.Logger())
-    r.Use(httpMiddleware())
+    r.Use(gin.Logger()).Use(httpMiddleware())
 
     r.POST("/add", h.AddDataHandler)
     r.GET("/infractions", h.GetInfractionsHandler)
     r.GET("/boundaries", h.GetMinMaxHandler)
-    r.OPTIONS("/add", func(c *gin.Context){})
 
     err := r.Run(":8080")
     if err != nil {

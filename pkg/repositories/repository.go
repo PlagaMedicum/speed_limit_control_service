@@ -10,17 +10,17 @@ type Controller struct {
 
 }
 
-func (con Controller) AddData(ctx context.Context, data domain.SpeedInfo) error {
+func (ctl Controller) AddData(ctx context.Context, data domain.SpeedInfo) error {
 
     return nil
 }
 
-func (con Controller) GetInfractions(ctx context.Context, date time.Time) ([]domain.SpeedInfo, error) {
+func (ctl Controller) GetInfractions(ctx context.Context, date time.Time) ([]domain.SpeedInfo, error) {
 
     return nil, nil
 }
 
-func (con Controller) GetBoundaries(ctx context.Context, date time.Time) ([]domain.SpeedInfo, error) {
+func (ctl Controller) GetBoundaries(ctx context.Context, date time.Time) ([]domain.SpeedInfo, error) {
 
     return nil, nil
 }
