@@ -1,0 +1,135 @@
+openapi: 3.0.0
+info:
+  version: '0.1'
+  title: 'Speed limit control service'
+  description: 'REST API service for controlling speed of transports and monitoring speed limit infractions.'
+paths:
+  /add:
+    post:
+      summary: 'Create new record about speed of the transport'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref:
+                '#/components/schemas/speedInfo'
+      responses:
+        201:
+          description: Created
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /infractions:
+    get:
+      summary: 'List of all transport that broke the speed limit'
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+            example: '20.12.2019'
+        - in: query
+          name: speed
+          schema:
+            type: number
+            format: float32
+            example: 60.5
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                example: [
+                  {
+                    "date": "20.12.2019 14:31:25", 
+                    "number": "1234 PP-7",
+                    "speed": 65.5
+                  },
+                  {
+                    "date": "20.12.2019 14:32:25", 
+                    "number": "1234 PP-7",
+                    "speed": 67.5
+                  },
+                  {
+                    "date": "20.12.2019 14:33:25", 
+                    "number": "1235 PP-7",
+                    "speed": 61.0
+                  },
+                ]
+                items:
+                  $ref:
+                    '#/components/schemas/speedInfo'
+  /boundaries:
+    get:
+      summary: 'minimal and maximal recorded speeds for the date'
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+            example: '20.12.2019'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                example: [
+                  {
+                    "date": "20.12.2019 14:31:25", 
+                    "number": "1234 PP-7",
+                    "speed": 21,3
+                  },
+                  {
+                    "date": "20.12.2019 15:31:25", 
+                    "number": "5432 PP-7",
+                    "speed": 180,0
+                  },
+                ]
+                items:
+                  $ref:
+                    '#/components/schemas/speedInfo'
+components:
+  schemas:
+    error:
+      type: object
+      required: 
+        - error
+      properties:
+        error:
+          type: string
+          example: 'Something went wrong!'
+    speedInfo:
+      type: object
+      required:
+        - date
+        - number
+        - speed
+      properties:
+        date:
+          type: string
+          example: '20.12.2019 14:31:25'
+        number:
+          type: string
+          example: '1234 PP-7'
+        speed:
+          type: number
+          format: float32
+          example: 66.3
+      
+servers:
+  - description: Localhost build test
+    url: http://localhost:8080/

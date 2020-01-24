@@ -1,0 +1,17 @@
+# dependencies
+node_modules
+vendor
+
+# testing
+coverage
+
+# production
+build
+bin
+
+# vim
+*.svp
+*.svo
+
+# others
+.idea

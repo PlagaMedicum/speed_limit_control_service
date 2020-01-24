@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package api;
+
+message SpeedInfo {
+    google.protobuf.Timestamp date = 1;
+    string number = 2;
+    float speed = 3;
+}
