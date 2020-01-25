@@ -15,8 +15,6 @@ paths:
               $ref:
                 '#/components/schemas/speedInfo'
       responses:
-        204:
-          description: No Content
         201:
           description: Created
         400:
@@ -73,6 +71,18 @@ paths:
                 items:
                   $ref:
                     '#/components/schemas/speedInfo'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
   /boundaries:
     get:
       summary: 'minimal and maximal recorded speeds for the date'
@@ -104,6 +114,18 @@ paths:
                 items:
                   $ref:
                     '#/components/schemas/speedInfo'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
 components:
   schemas:
     error:

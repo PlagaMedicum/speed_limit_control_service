@@ -36,9 +36,7 @@ func httpMiddleware() gin.HandlerFunc {
 func main() {
     h := handlers.Controller{
         usecases.Controller{
-            repositories.Controller{
-                // TODO
-            },
+            repositories.Controller{},
         },
     }
 

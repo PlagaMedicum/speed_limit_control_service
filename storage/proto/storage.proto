@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
-package api;
+package storage;
 
 message SpeedInfo {
     google.protobuf.Timestamp date = 1;

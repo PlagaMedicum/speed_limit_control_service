@@ -11,7 +11,7 @@ import (
     "time"
 )
 
-const dateLayout string = "02.01.2006 15:04:05"
+const dateLayout = "02.01.2006 15:04:05"
 
 type Controller struct {
     usecases.Usecases
@@ -50,12 +50,14 @@ func (ctl Controller) AddDataHandler(c *gin.Context) {
         err = errors.Wrap(err, "Error decoding request body")
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         log.Error(err)
+        return
     }
 
     si, err := unmarshalJSONMessage(m)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         log.Error(err)
+        return
     }
 
     err = ctl.Usecases.AddData(c, si)
@@ -63,6 +65,7 @@ func (ctl Controller) AddDataHandler(c *gin.Context) {
         err = errors.Wrap(err, "Error adding data")
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         log.Error(err)
+        return
     }
     c.Status(http.StatusCreated)
 }
@@ -75,6 +78,7 @@ func (ctl Controller) GetInfractionsHandler(c *gin.Context) {
         err = errors.Wrap(err, "Error parsing date from query")
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         log.Error(err)
+        return
     }
 
     limit, err := strconv.ParseFloat(c.Query("speed"), 32)
@@ -82,6 +86,7 @@ func (ctl Controller) GetInfractionsHandler(c *gin.Context) {
         err = errors.Wrap(err, "Error parsing speed(float32) from query")
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         log.Error(err)
+        return
     }
 
     silist, err := ctl.GetInfractions(c, date, float32(limit))
@@ -89,6 +94,7 @@ func (ctl Controller) GetInfractionsHandler(c *gin.Context) {
         err = errors.Wrap(err, "Error getting data")
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         log.Error(err)
+        return
     }
 
     var resp []jsonMessage
@@ -107,6 +113,7 @@ func (ctl Controller) GetMinMaxHandler(c *gin.Context) {
         err = errors.Wrap(err, "Error parsing date from query")
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         log.Error(err)
+        return
     }
 
     silist, err := ctl.GetMinMax(c, date)
@@ -114,6 +121,7 @@ func (ctl Controller) GetMinMaxHandler(c *gin.Context) {
         err = errors.Wrap(err, "Error getting data")
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         log.Error(err)
+        return
     }
 
     var resp []jsonMessage
