@@ -53,17 +53,17 @@ paths:
                 type: array
                 example: [
                   {
-                    "date": "20.12.2019 14:31:25", 
+                    "time": "20.12.2019 14:31:25",
                     "number": "1234 PP-7",
                     "speed": 65.5
                   },
                   {
-                    "date": "20.12.2019 14:32:25", 
+                    "time": "20.12.2019 14:32:25",
                     "number": "1234 PP-7",
                     "speed": 67.5
                   },
                   {
-                    "date": "20.12.2019 14:33:25", 
+                    "time": "20.12.2019 14:33:25",
                     "number": "1235 PP-7",
                     "speed": 61.0
                   },
@@ -101,12 +101,12 @@ paths:
                 type: array
                 example: [
                   {
-                    "date": "20.12.2019 14:31:25", 
+                    "time": "20.12.2019 14:31:25",
                     "number": "1234 PP-7",
                     "speed": 21,3
                   },
                   {
-                    "date": "20.12.2019 15:31:25", 
+                    "time": "20.12.2019 15:31:25",
                     "number": "5432 PP-7",
                     "speed": 180,0
                   },
@@ -139,11 +139,11 @@ components:
     speedInfo:
       type: object
       required:
-        - date
+        - time
         - number
         - speed
       properties:
-        date:
+        time:
           type: string
           example: '20.12.2019 14:31:25'
         number:

@@ -11,14 +11,15 @@ import (
     "time"
 )
 
-const dateLayout = "02.01.2006 15:04:05"
+const timeLayout = "02.01.2006 15:04:05"
+const dateLayout = "02.01.2006"
 
 type Controller struct {
     usecases.Usecases
 }
 
 type jsonMessage struct {
-    Date string
+    Time   string
     Number string
     Speed  float32
 }
@@ -30,13 +31,13 @@ func unmarshalJSONMessage(m jsonMessage) (domain.SpeedInfo, error) {
     }
 
     var err error
-    si.Date, err = time.Parse(dateLayout, m.Date)
+    si.Time, err = time.Parse(timeLayout, m.Time)
     return si, errors.Wrap(err, "Error parsing date")
 }
 
 func marshalJSONMessage(si domain.SpeedInfo) jsonMessage {
     return jsonMessage{
-        Date:   si.Date.Format(dateLayout),
+        Time:   si.Time.Format(timeLayout),
         Number: si.Number,
         Speed:  si.Speed,
     }

@@ -7,7 +7,6 @@ import (
 )
 
 type Repository interface {
-    AddData(ctx context.Context, data domain.SpeedInfo) error
-    GetInfractions(ctx context.Context, date time.Time) ([]domain.SpeedInfo, error)
-    GetBoundaries(ctx context.Context, date time.Time) ([]domain.SpeedInfo, error)
+    AddRecord(ctx context.Context, data domain.SpeedInfo) error
+    GetRecords(ctx context.Context, date time.Time) ([]domain.SpeedInfo, error)
 }

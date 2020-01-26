@@ -5,7 +5,7 @@ import "google/protobuf/timestamp.proto";
 package storage;
 
 message SpeedInfo {
-    google.protobuf.Timestamp date = 1;
+    google.protobuf.Timestamp time = 1;
     string number = 2;
     float speed = 3;
 }
