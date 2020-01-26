@@ -1,54 +1,109 @@
 package main
 
 import (
+    "fmt"
+    "github.com/pkg/errors"
+    "net/http"
+    "time"
+
     "github.com/PlagaMedicum/speed_limit_control_service/pkg/handlers"
     "github.com/PlagaMedicum/speed_limit_control_service/pkg/repositories"
     "github.com/PlagaMedicum/speed_limit_control_service/pkg/usecases"
     "github.com/gin-gonic/gin"
     log "github.com/sirupsen/logrus"
-    "net/http"
+    "github.com/spf13/viper"
 )
 
 var httpHeaders = map[string]string{
-    "Access-Control-Allow-Headers": "Content-Type, api_key, Authorization, access-control-allow-origin",
-    "Access-Control-Allow-Origin":  "*",
-    "Content-Type":                 "application/json",
-    "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+	"Access-Control-Allow-Headers": "Content-Type, api_key, Authorization, access-control-allow-origin",
+	"Access-Control-Allow-Origin":  "*",
+	"Content-Type":                 "application/json",
+	"Access-Control-Allow-Methods": "POST, OPTIONS, GET",
 }
 
-func httpMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        for k, v := range httpHeaders {
-            c.Writer.Header().Set(k, v)
+type config struct {
+    startTime time.Time
+    endTime time.Time
+}
+
+const accessTimeLayout = "15:04:05"
+
+func clockIsBetween(start, end, check time.Time) bool {
+    return check.After(start) && check.Before(end)
+}
+
+func httpMiddleware(cfg config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		for k, v := range httpHeaders {
+			c.Writer.Header().Set(k, v)
+		}
+
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+
+		if c.Request.Method == http.MethodGet {
+            now := time.Now()
+            check, err := time.Parse(accessTimeLayout, fmt.Sprintf("%02d:%02d:%02d", now.Hour(), now.Minute(), now.Second()))
+            if err != nil {
+                log.Errorf("Error parsing current time on the server: %v", err)
+            }
+
+            if !clockIsBetween(cfg.startTime, cfg.endTime, check) {
+                err := errors.Errorf("Error accessing service storage. Server provides storage access from %02d:%02d to %02d:%02d, but the time now is %02d:%02d:%02d",
+                    cfg.startTime.Hour(), cfg.startTime.Minute(), cfg.endTime.Hour(), cfg.endTime.Minute(), now.Hour(), now.Minute(), now.Second())
+                c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+            }
         }
 
-        if c.Request.Method == http.MethodOptions {
-            c.AbortWithStatus(http.StatusNoContent)
-            return
-        }
+		c.Next()
+	}
+}
 
-        c.Next()
+func parseConfigurations() (config, error) {
+    viper.SetConfigName("config")
+    viper.SetConfigType("yaml")
+    viper.AddConfigPath(".")
+    err := viper.ReadInConfig()
+    if err != nil {
+        return config{}, errors.Wrap(err, "Error reading config file")
     }
+
+    cfg := config{}
+    cfg.startTime, err = time.Parse(accessTimeLayout, viper.GetString("startTime"))
+    if err != nil {
+        return config{}, err
+    }
+    cfg.endTime, err = time.Parse(accessTimeLayout, viper.GetString("endTime"))
+    if err != nil {
+        return config{}, err
+    }
+
+    return cfg, nil
 }
-
-
 
 func main() {
-    h := handlers.Controller{
-        usecases.Controller{
-            repositories.Controller{},
-        },
-    }
+	h := handlers.Controller{
+		usecases.Controller{
+			repositories.Controller{},
+		},
+	}
 
-    r := gin.New()
-    r.Use(gin.Logger()).Use(httpMiddleware())
-
-    r.POST("/add", h.AddDataHandler)
-    r.GET("/infractions", h.GetInfractionsHandler)
-    r.GET("/boundaries", h.GetMinMaxHandler)
-
-    err := r.Run(":8080")
+    cfg, err := parseConfigurations()
     if err != nil {
-        log.Fatal("Server crashed: ", err)
+        log.Fatalf("Error parsing configurations: %v", err)
     }
+
+	r := gin.New()
+	r.Use(gin.Logger()).Use(httpMiddleware(cfg))
+
+	r.POST("/add", h.AddDataHandler)
+	r.GET("/infractions", h.GetInfractionsHandler)
+	r.GET("/boundaries", h.GetMinMaxHandler)
+
+	err = r.Run(":8080")
+	if err != nil {
+		log.Fatal("Server crashed: ", err)
+	}
 }
