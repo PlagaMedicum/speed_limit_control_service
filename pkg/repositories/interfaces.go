@@ -7,6 +7,6 @@ import (
 )
 
 type Repository interface {
-    AddRecord(ctx context.Context, data domain.SpeedInfo) error
-    GetRecords(ctx context.Context, date time.Time) ([]domain.SpeedInfo, error)
+    Insert(ctx context.Context, data domain.SpeedInfo) error
+    SelectByDate(ctx context.Context, date time.Time) ([]domain.SpeedInfo, error)
 }

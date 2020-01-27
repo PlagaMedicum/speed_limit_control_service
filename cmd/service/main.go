@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    "github.com/PlagaMedicum/speed_limit_control_service/pkg/storage"
     "github.com/pkg/errors"
     "net/http"
     "time"
@@ -14,16 +15,11 @@ import (
     "github.com/spf13/viper"
 )
 
-var httpHeaders = map[string]string{
-	"Access-Control-Allow-Headers": "Content-Type, api_key, Authorization, access-control-allow-origin",
-	"Access-Control-Allow-Origin":  "*",
-	"Content-Type":                 "application/json",
-	"Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-}
-
 type config struct {
     startTime time.Time
     endTime time.Time
+    httpHeaders map[string]string
+    dataPath string
 }
 
 const accessTimeLayout = "15:04:05"
@@ -34,7 +30,7 @@ func clockIsBetween(start, end, check time.Time) bool {
 
 func httpMiddleware(cfg config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		for k, v := range httpHeaders {
+		for k, v := range cfg.httpHeaders {
 			c.Writer.Header().Set(k, v)
 		}
 
@@ -51,8 +47,10 @@ func httpMiddleware(cfg config) gin.HandlerFunc {
             }
 
             if !clockIsBetween(cfg.startTime, cfg.endTime, check) {
-                err := errors.Errorf("Error accessing service storage. Server provides storage access from %02d:%02d to %02d:%02d, but the time now is %02d:%02d:%02d",
-                    cfg.startTime.Hour(), cfg.startTime.Minute(), cfg.endTime.Hour(), cfg.endTime.Minute(), now.Hour(), now.Minute(), now.Second())
+                err := errors.Errorf("Error accessing service storage. Server provides storage access from" +
+                    "%02d:%02d to %02d:%02d, but the time now is %02d:%02d:%02d",
+                    cfg.startTime.Hour(), cfg.startTime.Minute(), cfg.endTime.Hour(), cfg.endTime.Minute(),
+                    now.Hour(), now.Minute(), now.Second())
                 c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
             }
         }
@@ -69,8 +67,8 @@ func parseConfigurations() (config, error) {
     if err != nil {
         return config{}, errors.Wrap(err, "Error reading config file")
     }
-
     cfg := config{}
+
     cfg.startTime, err = time.Parse(accessTimeLayout, viper.GetString("startTime"))
     if err != nil {
         return config{}, err
@@ -80,20 +78,28 @@ func parseConfigurations() (config, error) {
         return config{}, err
     }
 
+    cfg.httpHeaders = viper.GetStringMapString("cors")
+
+    cfg.dataPath = viper.GetString("dataPath")
+
     return cfg, nil
 }
 
 func main() {
-	h := handlers.Controller{
-		usecases.Controller{
-			repositories.Controller{},
-		},
-	}
-
     cfg, err := parseConfigurations()
     if err != nil {
         log.Fatalf("Error parsing configurations: %v", err)
     }
+
+	h := handlers.Controller{
+		usecases.Controller{
+			repositories.Controller{
+			    storage.Storage{
+			        DataPath: cfg.dataPath,
+                },
+            },
+		},
+	}
 
 	r := gin.New()
 	r.Use(gin.Logger()).Use(httpMiddleware(cfg))

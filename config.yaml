@@ -1,2 +1,8 @@
 startTime: "09:00:00"
 endTime: "18:00:00"
+cors:
+  Access-Control-Allow-Headers: "Content-Type, api_key, Authorization, access-control-allow-origin"
+  Access-Control-Allow-Origin:  "*"
+  Content-Type:                 "application/json"
+  Access-Control-Allow-Methods: "POST, OPTIONS, GET"
+dataPath: "data/"

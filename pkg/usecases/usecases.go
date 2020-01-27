@@ -14,17 +14,24 @@ type Controller struct {
 
 // AddData adds new speed information in storage.
 func (ctl Controller) AddData(ctx context.Context, data domain.SpeedInfo) error {
-    err := ctl.Repository.AddRecord(ctx, data)
+    err := ctl.Repository.Insert(ctx, data)
     return err
 }
 
 // GetInfractions returns a list of all transport that
 // broke speed limit, for specified date.
 func (ctl Controller) GetInfractions(ctx context.Context, date time.Time, limit float32) ([]domain.SpeedInfo, error) {
-    silist, err := ctl.Repository.GetRecords(ctx, date)
+    silist, err := ctl.Repository.SelectByDate(ctx, date)
 
     var infList []domain.SpeedInfo
     for _, si := range silist {
+        select {
+        case <-ctx.Done():
+            return nil, context.Canceled
+        default:
+            break
+        }
+
         if si.Speed > limit {
             infList = append(infList, si)
         }
@@ -35,11 +42,18 @@ func (ctl Controller) GetInfractions(ctx context.Context, date time.Time, limit 
 
 // GetMinMax returns minimal and maximal speeds for specified date.
 func (ctl Controller) GetMinMax(ctx context.Context, date time.Time) ([]domain.SpeedInfo, error) {
-    silist, err := ctl.Repository.GetRecords(ctx, date)
+    silist, err := ctl.Repository.SelectByDate(ctx, date)
 
     min := domain.SpeedInfo{Speed: float32(math.MaxFloat32)}
     max := domain.SpeedInfo{Speed: float32(0)}
     for _, si := range silist {
+        select {
+        case <-ctx.Done():
+            return nil, context.Canceled
+        default:
+            break
+        }
+
         if si.Speed > max.Speed {
             max = si
         }
